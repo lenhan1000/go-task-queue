@@ -16,7 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/urfave/cli"
 
-	testtasks "pc-part-crawler/tasks"
+	testtasks "github.com/lenhan1000/go-task-queue/tasks"
 )
 
 var (
@@ -95,11 +95,39 @@ func startServer() (*machinery.Server, error) {
 }
 
 func worker() error {
-	consumerTag := "geeral_worker"
+	consumerTag := "general_worker"
 
 	server, err := startServer()
 	handleError(err, "error")
 
+	worker := server.NewWorker(consumerTag, 10)
+
+	errorHandler := func(err error) {
+		log.ERROR.Println("Error Handler: ", err)
+	}
+
+	preTaskHandler := func(signature *tasks.Signature) {
+		log.INFO.Println("Pre Task Handler:", signature.Name)
+	}
+
+	postTaskHandler := func(signature *tasks.Signature) {
+		log.INFO.Println("Post Task Handler: ", signature.Name)
+	}
+	worker.SetErrorHandler(errorHandler)
+	worker.SetPostTaskHandler(postTaskHandler)
+	worker.SetPreTaskHandler(preTaskHandler)
+
+	return worker.Launch()
+}
+
+func workers() error {
+	consumerTag := "general_worker"
+
+	server, err := startServer()
+	handleError(err, "error")
+	for i := 1; i < 5; i++ {
+
+	}
 	worker := server.NewWorker(consumerTag, 0)
 
 	errorHandler := func(err error) {
